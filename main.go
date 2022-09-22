@@ -2,19 +2,24 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
+
+var globalDataStore = map[string]string{}
 
 func init() {
 	rand.NewSource(time.Now().Unix())
 }
 
 func main() {
-	// routing configuration
+	// endpoint routing configuration
 
 	handler := http.NewServeMux()
 
@@ -32,55 +37,80 @@ func main() {
 		if rand.Intn(100) > 20 {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("ok"))
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("not ok"))
+			return
 		}
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("not ok"))
 	})
 
 	handler.HandleFunc("/stubbed-process-2", func(w http.ResponseWriter, r *http.Request) {
 		if rand.Intn(100) > 40 {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("ok"))
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("not ok"))
+			return
 		}
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("not ok"))
 	})
 
 	handler.HandleFunc("/stubbed-process-3", func(w http.ResponseWriter, r *http.Request) {
 		if rand.Intn(100) > 60 {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("ok"))
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("not ok"))
+			return
 		}
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("not ok"))
 	})
 
 	handler.HandleFunc("/stubbed-process-4", func(w http.ResponseWriter, r *http.Request) {
 		if rand.Intn(100) > 80 {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("ok"))
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("not ok"))
+			return
 		}
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("not ok"))
+	})
+
+	handler.HandleFunc("/save", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte("use post"))
+			return
+		}
+		bodyData, _ := ioutil.ReadAll(r.Body)
+		requestId := uuid.New().String()
+		globalDataStore[requestId] = string(bodyData)
+		w.Write([]byte(requestId))
+	})
+
+	handler.HandleFunc("/load/", func(w http.ResponseWriter, r *http.Request) {
+		// get the part after /load/, which should be the uuid returned from /save-me
+		dataId := strings.TrimPrefix(r.URL.Path, "/load/")
+		if globalDataInstance, ok := globalDataStore[dataId]; ok {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(globalDataInstance))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("not found"))
 	})
 
 	// healthcheck function
 
 	go func() {
 		for {
+			// default to pinging ourselves
 			targetService := "http://127.0.0.1:3000"
-			log.Printf("pinging %s...", targetService)
+			fmt.Printf("pinging %s...\n", targetService)
 			req, _ := http.NewRequest("GET", targetService, nil)
 			res, _ := http.DefaultClient.Do(req)
 			if res.StatusCode != http.StatusOK {
-				log.Printf("failed to complete healthcheck (status code: %v)", res.StatusCode)
+				fmt.Printf("failed to complete healthcheck (status code: %v)\n", res.StatusCode)
 			}
 			responseBody, _ := ioutil.ReadAll(res.Body)
-			log.Println("body data: ", string(responseBody))
+			fmt.Printf("body data: %s\n", string(responseBody))
 			<-time.After(time.Second)
 		}
 	}()
@@ -88,6 +118,6 @@ func main() {
 	// start the server
 
 	if err := http.ListenAndServe("0.0.0.0:3000", handler); err != nil {
-		log.Printf("failed to start server: %s", err)
+		fmt.Printf("failed to start server: %s\n", err)
 	}
 }
