@@ -30,7 +30,7 @@ This repository contains two code files, `main.go` and `index.js`. They contain 
 1. You will need the following tools installed:
    1. Runtime
       1. [Go](https://go.dev/doc/install) if you're attempting this in Go
-      2. [Node](https://nodejs.org/en/download/) if you're attempting this in Node
+      2. [Node](https://nodejs.org/en/download/) if you're attempting this in JS
    2. [Docker](https://docs.docker.com/get-docker/)
    3. [Kubectl](https://kubernetes.io/docs/tasks/tools/)
    4. [Helm](https://helm.sh/docs/intro/install/)
@@ -39,7 +39,12 @@ This repository contains two code files, `main.go` and `index.js`. They contain 
 3. You may ignore error handling unless it's an intentional design decision
 4. For all tasks, functionality in terms of endpoint behaviour must remain the same
 5. Assessment of this task will be a combination of the quality of the submission and a conversation over design decisions made during the implementation
-6. If you are completely unfamiliar with Go and it would be faster to attempt this in another language, you may rewrite it into any language of your choice but the functionality must be the same
+6. If you are completely unfamiliar with Go/JS and it would be faster to attempt this in another language, you may rewrite it into any language of your choice but the functionality must be the same
+
+Install the dependencies using:
+
+- `go mod vendor` for Go
+- `npm install` for JS
 
 ## Task 1: Architectural/lifecycle improvements
 
